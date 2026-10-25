@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template for `make install-runner`, which fills in the __PLACEHOLDERS__ -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>skm.daily.runner</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__NODE__</string>
+		<string>scripts/runner.mjs</string>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>__ROOT__</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>__PATH__</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>__ROOT__/.runner/runner.log</string>
+	<key>StandardErrorPath</key>
+	<string>__ROOT__/.runner/runner.log</string>
+</dict>
+</plist>

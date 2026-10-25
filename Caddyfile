@@ -1,0 +1,13 @@
+daily.skm {
+	tls internal
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8787
+	}
+	root * /Users/stevemynett/Projects/daily/codes/out
+	try_files {path} {path}.html {path}/index.html
+	file_server
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}

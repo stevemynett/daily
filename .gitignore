@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Runner logs (make install-runner)
+.runner/
+*.log
+npm-debug.log*
+
+# showsin.py output when run with the default DIR
+show-directory.md
+.show-directory-cache.json
+__pycache__/
+*.pyc
+
+# Local env overrides (BRIEFINGS_DIR, RUNNER_PORT, etc.)
+.env
+.env*.local
+
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Claude Code local settings
+.claude/settings.local.json
