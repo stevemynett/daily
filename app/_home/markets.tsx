@@ -77,7 +77,7 @@ function Chart({ quotes }: { quotes: Quote[] }) {
 
   function move(e: React.PointerEvent<SVGSVGElement>) {
     const box = e.currentTarget.getBoundingClientRect();
-    const minute = OPEN + ((e.clientX - box.left - PAD.left) / (width - PAD.left - PAD.right)) * (CLOSE - OPEN);
+    const minute = OPEN + (((e.clientX - box.left) * (width / box.width) - PAD.left) / (width - PAD.left - PAD.right)) * (CLOSE - OPEN);
     setHover(Math.min(CLOSE, Math.max(OPEN, minute)));
   }
 

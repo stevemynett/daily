@@ -1,5 +1,4 @@
-daily.skm {
-	tls internal
+(daily) {
 	handle /api/* {
 		reverse_proxy 127.0.0.1:8787
 	}
@@ -10,4 +9,14 @@ daily.skm {
 		rewrite * /404.html
 		file_server
 	}
+}
+
+daily.skm {
+	tls internal
+	import daily
+}
+
+# Other devices on the home wifi. Plain HTTP, so phones don't need Caddy's CA.
+http://sm-mbp.local {
+	import daily
 }

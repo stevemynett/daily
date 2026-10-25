@@ -103,7 +103,12 @@ export async function runPrompt(name, days) {
     .replaceAll('$ARGUMENTS', days)
     .replaceAll('~/briefings', briefings);
 
-  const args = ['-p', prompt, '--allowedTools', 'WebSearch WebFetch Task Read', '--add-dir', briefings, '--output-format', 'text'];
+  return claude(prompt, 'WebSearch WebFetch Task Read');
+}
+
+// Runs a headless Claude with the given tools and returns its text output
+export function claude(prompt, tools) {
+  const args = ['-p', prompt, '--allowedTools', tools, '--add-dir', briefings, '--output-format', 'text'];
   return new Promise((resolve) => {
     const child = spawn('claude', args, { stdio: ['ignore', 'pipe', 'inherit'] });
     let output = '';
@@ -119,8 +124,9 @@ export async function runPrompt(name, days) {
   });
 }
 
-// Drops any status chatter before the first heading
+// Drops any status chatter before the first heading. Claude sometimes prints the whole document
+// twice, so start from the last copy.
 export function from(output, heading) {
-  const at = output.indexOf(heading);
+  const at = output.lastIndexOf(heading);
   return (at === -1 ? output : output.slice(at)).trim() + '\n';
 }

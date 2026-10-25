@@ -59,35 +59,53 @@ export default function ListingView({
               {day.heading} <span className="type-count">{day.items.length}</span>
             </h2>
           ) : (
-            <h3>{day.heading}</h3>
+            day.heading && <h3>{day.heading}</h3>
           )}
           <ul className="event-list">
-            {day.items.map((item, i) => (
-              <li key={i}>
-                <span>
-                  {item.url ? (
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="event-name">
-                      {item.name}
-                    </a>
-                  ) : (
-                    <span className="event-name">{item.name}</span>
-                  )}
-                  {item.category && filters && (
-                    <button
-                      type="button"
-                      className="tag"
-                      aria-pressed={filter === item.category}
-                      title={filter === item.category ? 'Show all' : `Show only ${item.category}`}
-                      onClick={() => toggle(item.category)}
-                    >
-                      {item.category}
-                    </button>
-                  )}
-                </span>
-                <span className="event-when">{item.where}</span>
-                {item.description && <span>{item.description}</span>}
-              </li>
-            ))}
+            {day.items.map((item, i) =>
+              day.heading === 'Closings' ? (
+                // Closings show only the name and the closing date; older
+                // listings put the neighbourhood before the date
+                <li key={i} className="closing">
+                  <span className="event-name">{item.name}</span>
+                  <span className="event-when">{item.where.replace(/\.$/, '').split(', ').at(-1)}</span>
+                </li>
+              ) : (
+                <li key={i}>
+                  <span>
+                    {item.url ? (
+                      <a
+                        href={item.url}
+                        {...(item.url.startsWith('spotify:') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+                        className="event-name"
+                      >
+                        {item.name}
+                      </a>
+                    ) : (
+                      <span className="event-name">{item.name}</span>
+                    )}
+                    {item.category && filters && (
+                      <button
+                        type="button"
+                        className="tag"
+                        aria-pressed={filter === item.category}
+                        title={filter === item.category ? 'Show all' : `Show only ${item.category}`}
+                        onClick={() => toggle(item.category)}
+                      >
+                        {item.category}
+                      </button>
+                    )}
+                    {item.tickets && (
+                      <span className="badge" data-tickets={item.tickets === 'Sold out' ? 'sold-out' : 'available'}>
+                        {item.tickets}
+                      </span>
+                    )}
+                  </span>
+                  <span className="event-when">{item.where}</span>
+                  {item.description && <span>{item.description}</span>}
+                </li>
+              ),
+            )}
           </ul>
         </div>
       ))}

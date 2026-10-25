@@ -1,9 +1,10 @@
 HOST := daily.skm
+LAN_HOST := sm-mbp.local
 RUNNER_LABEL := skm.daily.runner
 RUNNER_PLIST := $(HOME)/Library/LaunchAgents/$(RUNNER_LABEL).plist
 BREW_CADDYFILE := /opt/homebrew/etc/Caddyfile
 
-.PHONY: help dev build daily briefing shows runner install-runner uninstall-runner runner-log setup hosts trust start stop restart status teardown
+.PHONY: help dev build daily records briefing watch shows runner install-runner uninstall-runner runner-log setup hosts trust start stop restart status teardown lan
 
 .DEFAULT_GOAL := help
 
@@ -16,13 +17,20 @@ dev: ## Run the Next.js dev server
 build: ## Build the static site
 	npm run build
 
-daily: ## Refresh the events, food and albums listings and rebuild (DAYS=30)
+daily: ## Refresh the events, jazz and food listings and rebuild (DAYS=30)
 	node scripts/daily.mjs $(DAYS)
+	$(MAKE) build
+
+records: ## Refresh the Records page (new and upcoming albums) and rebuild
+	node scripts/records.mjs
 	$(MAKE) build
 
 briefing: ## Run the news briefing and rebuild (DAYS=2)
 	node scripts/briefing.mjs $(DAYS)
 	$(MAKE) build
+
+watch: ## Find something to watch and save the picks for the Watch page (Q="request", TYPE=Any|Movie|Series)
+	WATCH_QUERY='$(subst ','\'',$(Q))' WATCH_TYPE='$(TYPE)' node scripts/watch.mjs
 
 shows: ## Write show-directory.md into photo venue folders (DIR=folder holding the venues, FULL=1 rescans)
 	cd "$(or $(DIR),.)" && python3 $(CURDIR)/scripts/showsin.py $(if $(FULL),--full)
@@ -70,6 +78,11 @@ restart: ## Restart Caddy
 status: ## Show Caddy status and the site's HTTP code
 	brew services info caddy
 	curl -sS -o /dev/null -w '%{http_code}\n' https://$(HOST)
+	curl -sS -o /dev/null -w '%{http_code}\n' http://$(LAN_HOST)
+
+lan: ## Let Caddy through the macOS firewall so other devices on the wifi can reach http://$(LAN_HOST)
+	sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add $$(readlink -f $$(which caddy))
+	sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp $$(readlink -f $$(which caddy))
 
 teardown: stop ## Stop Caddy, remove Caddyfile link and hosts entry
 	rm -f $(BREW_CADDYFILE)

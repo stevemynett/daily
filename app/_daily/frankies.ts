@@ -32,6 +32,19 @@ function price(prices: string[]) {
   return unique.length > 1 ? `${unique[0]} to ${unique.at(-1)}` : (unique[0] ?? '');
 }
 
+const SMALL = new Set(['a', 'an', 'and', 'at', 'by', 'feat', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']);
+
+// Turntable names are typed in caps. Title-case the all-caps words, leaving
+// initials (J.J., LJ, MG) and words already in mixed case alone.
+function titleCase(name: string) {
+  return name.replace(/[A-Z][A-Z'.]*/g, (word, offset: number) => {
+    if (/\./.test(word) || /^[IVX]+$/.test(word) || (word.length <= 2 && !/[AEIOUY]/.test(word))) return word;
+    const lower = word.toLowerCase();
+    if (offset > 0 && SMALL.has(lower) && !/[:\-/]\s*$/.test(name.slice(0, offset))) return lower;
+    return lower.replace(/^(mc)?(\w)/, (_, mc = '', c) => (mc ? 'Mc' : '') + c.toUpperCase());
+  });
+}
+
 // Shows from Frankie's ticketing site (Turntable), fetched at build. The site
 // rebuilds after each scheduled run, so the list is at most a day old.
 export async function loadFrankies(days = 31): Promise<FrankiesShow[] | null> {
@@ -48,7 +61,7 @@ export async function loadFrankies(days = 31): Promise<FrankiesShow[] | null> {
         const start = new Date(p.datetime);
         const day = vancouverDay(start);
         return {
-          name: p.show.name.replace(/\s+/g, ' ').trim(),
+          name: titleCase(p.show.name.replace(/\s+/g, ' ').trim()),
           start: p.datetime,
           day,
           time: start.toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit', timeZone: TZ }),

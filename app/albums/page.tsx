@@ -1,9 +1,9 @@
 import { loadListing, type Listing } from '../_daily/data';
-import ListingView from '../_daily/listing';
 import RunStatus from '../_daily/run-status';
+import AlbumsView from './albums-view';
 
 export const metadata = {
-  title: 'Albums',
+  title: 'Records',
 };
 
 const HALF_YEAR = 182 * 24 * 60 * 60 * 1000;
@@ -17,57 +17,37 @@ function releaseDate(heading: string, now: Date): Date | null {
   return parsed;
 }
 
-function split(listing: Listing) {
+// Released albums only, as one list, newest first, with no date headings; anything
+// dated after today is dropped
+function released(listing: Listing): Listing {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const released: Listing['groups'] = [];
-  const upcoming: Listing['groups'] = [];
-  for (const group of listing.groups) {
-    const date = releaseDate(group.heading, now);
-    (date && date > today ? upcoming : released).push(group);
-  }
-  return {
-    released: { ...listing, groups: released },
-    upcoming: { ...listing, groups: upcoming.reverse() },
-  };
+  const items = listing.groups
+    .filter((group) => {
+      const date = releaseDate(group.heading, now);
+      return !date || date <= today;
+    })
+    .flatMap((group) => group.items);
+  return { ...listing, groups: items.length ? [{ heading: '', items }] : [] };
 }
 
 export default function Albums() {
   const listing = loadListing('albums');
-  const sections = listing && split(listing);
+  const albums = listing && released(listing);
 
   return (
     <>
       <div className="title-row">
-        <h1 className="page-title">Albums</h1>
-        <RunStatus lastRun={listing?.updatedAt ?? null} />
+        <h1 className="page-title">Records</h1>
+        <RunStatus job="records" lastRun={listing?.updatedAt ?? null} />
       </div>
 
-      {sections === null ? (
+      {albums === null ? (
         <section className="listing-section">
-          <p className="muted">No listing yet. Run `make daily`.</p>
+          <p className="muted">No listing yet. Run `make records`.</p>
         </section>
       ) : (
-        <>
-          <section className="listing-section">
-            <h2>Upcoming releases</h2>
-            {sections.upcoming.groups.length === 0 ? (
-              <p className="muted">No upcoming releases.</p>
-            ) : (
-              <ListingView listing={sections.upcoming} />
-            )}
-          </section>
-
-          <section className="listing-section">
-            <h2>Already released</h2>
-            {sections.released.groups.length === 0 ? (
-              <p className="muted">Nothing released yet.</p>
-            ) : (
-              <ListingView listing={sections.released} />
-            )}
-            {sections.released.footer && <p className="caption">{sections.released.footer}</p>}
-          </section>
-        </>
+        <AlbumsView released={albums} />
       )}
     </>
   );

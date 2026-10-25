@@ -15,6 +15,16 @@ const links = [
     ),
   },
   {
+    href: '/todo',
+    label: 'Todo',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="m8 12 3 3 5-6" />
+      </svg>
+    ),
+  },
+  {
     href: '/jobs',
     label: 'Jobs',
     icon: (
@@ -55,11 +65,30 @@ const links = [
   },
   {
     href: '/albums',
-    label: 'Albums',
+    label: 'Records',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9" />
         <circle cx="12" cy="12" r="2.5" />
+      </svg>
+    ),
+  },
+  {
+    href: '/watch',
+    label: 'Watch',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="6" width="18" height="12" rx="2" />
+        <path d="m8 2 4 4 4-4M8 21h8" />
+      </svg>
+    ),
+  },
+  {
+    href: '/tabs',
+    label: 'Saved Tabs',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
       </svg>
     ),
   },
@@ -73,7 +102,8 @@ const links = [
       </svg>
     ),
     children: [
-      { href: '/photography/editing', label: 'Editing' },
+      { href: '/photography/editing-jazz', label: 'Editing Jazz' },
+      { href: '/photography/editing-personal', label: 'Editing Personal' },
       { href: '/photography/archive', label: 'Archive' },
     ],
   },
