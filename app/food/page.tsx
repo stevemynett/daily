@@ -17,7 +17,7 @@ export default function Food() {
       </div>
 
       <section className="listing-section">
-        {listing === null ? <p className="muted">No listing yet. Run `make daily`.</p> : <ListingView listing={listing} sections filters={false} />}
+        {listing === null ? <p className="muted">No listing yet. Run `make daily`.</p> : <ListingView listing={listing} />}
         {listing?.footer && <p className="caption">{listing.footer}</p>}
       </section>
     </>

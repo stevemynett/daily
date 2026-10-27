@@ -9,6 +9,8 @@ export default function TodoList() {
   const [todos, setTodos] = useState<Todo[] | null>(null);
   const [offline, setOffline] = useState(false);
   const [text, setText] = useState('');
+  // The todo being edited, keyed by its added time, and its draft text
+  const [editing, setEditing] = useState<{ added: string; text: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/todos')
@@ -37,6 +39,14 @@ export default function TodoList() {
 
   const toggle = (todo: Todo) => save(todos!.map((t) => (t === todo ? { ...t, done: !t.done } : t)));
   const remove = (todo: Todo) => save(todos!.filter((t) => t !== todo));
+  // Saves the draft; an empty draft keeps the old text
+  async function finishEdit() {
+    if (!editing) return;
+    const next = editing.text.trim();
+    const todo = todos!.find((t) => t.added === editing.added);
+    setEditing(null);
+    if (todo && next && next !== todo.text) await save(todos!.map((t) => (t === todo ? { ...t, text: next } : t)));
+  }
   // Open items first, done ones below, each newest first
   const shown = [...(todos ?? [])].sort((a, b) => Number(a.done) - Number(b.done));
 
@@ -59,7 +69,28 @@ export default function TodoList() {
           {shown.map((todo) => (
             <li key={todo.added} className="tab-item todo-item" data-done={todo.done}>
               <input type="checkbox" checked={todo.done} onChange={() => toggle(todo)} aria-label={`Done: ${todo.text}`} />
-              <span className="tab-body">{todo.text}</span>
+              {editing?.added === todo.added ? (
+                <input
+                  type="text"
+                  className="todo-edit"
+                  value={editing.text}
+                  onChange={(e) => setEditing({ ...editing, text: e.target.value })}
+                  onBlur={finishEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') finishEdit();
+                    if (e.key === 'Escape') setEditing(null);
+                  }}
+                  aria-label="Edit todo"
+                  autoFocus
+                />
+              ) : (
+                <span className="tab-body" onDoubleClick={() => setEditing({ added: todo.added, text: todo.text })}>
+                  {todo.text}
+                </span>
+              )}
+              <button type="button" className="tag tab-remove" onClick={() => setEditing({ added: todo.added, text: todo.text })}>
+                Edit
+              </button>
               <button type="button" className="tag tab-remove" onClick={() => remove(todo)}>
                 Delete
               </button>

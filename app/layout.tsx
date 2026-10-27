@@ -1,5 +1,6 @@
 import { Cormorant_Garamond, Montserrat } from 'next/font/google';
 import Nav from './nav';
+import StatsTracker from './stats-tracker';
 import './globals.css';
 
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${montserrat.variable} ${cormorant.variable}`}>
       <body>
         <Nav siteName="Daily" />
+        <StatsTracker />
         <div className="content">
           <main className="main">{children}</main>
         </div>

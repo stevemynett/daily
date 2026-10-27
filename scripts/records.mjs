@@ -16,7 +16,8 @@ const output = await runPrompt('records', '');
 writeFileSync(file, output);
 
 if (!output.includes('# Album releases')) fail(`No Album releases heading in output, see ${file}`);
-const page = from(output, '# Album releases');
+// Claude sometimes adds notes after the Generated line; they aren't part of the page
+const page = from(output, '# Album releases').replace(/(\n_?Generated [^\n]*)[\s\S]*$/, '$1\n');
 const count = page.split('\n').filter((line) => line.startsWith('- **')).length;
 if (count < MIN_ALBUMS) fail(`Only ${count} albums, keeping the old page. See ${file}`);
 

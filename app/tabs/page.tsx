@@ -1,14 +1,14 @@
 import SavedTabs from './saved-tabs';
 
 export const metadata = {
-  title: 'Saved Tabs',
+  title: 'To Read',
 };
 
 export default function Tabs() {
   return (
     <>
-      <h1 className="page-title">Saved Tabs</h1>
-      <SavedTabs />
+      <h1 className="page-title">To Read</h1>
+      <SavedTabs list="read" />
     </>
   );
 }

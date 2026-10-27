@@ -1,5 +1,5 @@
 // Latest posts from YVR Deals, read from its homepage at build time since it has no feed
-export type Deal = { title: string; url: string; price?: string; dates?: string };
+export type Deal = { title: string; url: string; price?: string; dates?: string; stops?: string };
 
 const DEAL = /<a href="(https:\/\/yvrdeals\.com\/[a-z0-9-]+)" title="([^"]+)"/g;
 
@@ -61,14 +61,20 @@ function datePairs(post: string) {
   return first && last && first !== last ? `${first} to ${last}` : first;
 }
 
-async function travelDates(url: string, now: Date) {
+// "The flights have 1 stop in Dallas each way"; the post body ends before the related posts
+const stopsIn = (post: string) =>
+  [...post.split(/\d+ Comments|People That Liked/)[0].matchAll(/stops?(?: each way)? in ([A-Z][^.]*?)(?: each way|,| and |\.)/g)]
+    .map((m) => m[1])
+    .join(', ') || undefined;
+
+async function details(url: string, now: Date) {
   try {
     const res = await fetch(url, { headers: UA });
-    if (!res.ok) return undefined;
+    if (!res.ok) return {};
     const post = text(await res.text());
-    return datePairs(post) ?? travelMonths(post, now);
+    return { dates: datePairs(post) ?? travelMonths(post, now), stops: stopsIn(post) };
   } catch {
-    return undefined;
+    return {};
   }
 }
 
@@ -86,8 +92,8 @@ export async function loadDeals(limit = 8): Promise<Deal[] | null> {
     }
     const latest = deals.slice(0, limit);
     const now = new Date();
-    const dates = await Promise.all(latest.map((deal) => travelDates(deal.url, now)));
-    return latest.map((deal, i) => ({ ...deal, dates: dates[i] }));
+    const extra = await Promise.all(latest.map((deal) => details(deal.url, now)));
+    return latest.map((deal, i) => ({ ...deal, ...extra[i] }));
   } catch {
     return null;
   }

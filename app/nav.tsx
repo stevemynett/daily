@@ -46,7 +46,7 @@ const links = [
   },
   {
     href: '/briefing',
-    label: 'Briefing',
+    label: 'News',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 4h13v15a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2zM17 8h3v11a2 2 0 0 1-2 2" />
@@ -64,6 +64,34 @@ const links = [
     ),
   },
   {
+    href: '/cooking',
+    label: 'Cooking',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M3 11h18M5 11v7a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-7M21 11h1M2 11h1M9 3c0 1.5 1 1.5 1 3s-1 1.5-1 3M14 3c0 1.5 1 1.5 1 3s-1 1.5-1 3" />
+      </svg>
+    ),
+  },
+  {
+    href: '/travel',
+    label: 'Travel',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/shopping',
+    label: 'Shopping',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z" />
+        <path d="M9 10V6a3 3 0 0 1 6 0v4" />
+      </svg>
+    ),
+  },
+  {
     href: '/albums',
     label: 'Records',
     icon: (
@@ -74,18 +102,17 @@ const links = [
     ),
   },
   {
-    href: '/watch',
-    label: 'Watch',
+    href: '/tabs',
+    label: 'To Read',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <path d="m8 2 4 4 4-4M8 21h8" />
+        <path d="M3 5h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H3zM21 5h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z" />
       </svg>
     ),
   },
   {
-    href: '/tabs',
-    label: 'Saved Tabs',
+    href: '/saved',
+    label: 'Saved',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
@@ -108,6 +135,9 @@ const links = [
     ],
   },
 ];
+
+// Every page the sidebar links to, for the Stats page
+export const pages = links.flatMap((link) => [{ href: link.href, label: link.label }, ...(link.children ?? [])]);
 
 const menuIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -181,6 +211,9 @@ export default function Nav({ siteName }: { siteName: string }) {
             </div>
           ))}
         </div>
+        <Link href="/stats" className="nav-stats" aria-current={pathname === '/stats' ? 'page' : undefined} onClick={() => setOpen(false)}>
+          Stats
+        </Link>
       </nav>
     </>
   );

@@ -10,7 +10,7 @@ type Status = {
 
 const JOBS = [
   { id: 'daily', label: 'Daily listings' },
-  { id: 'briefing', label: 'Briefing' },
+  { id: 'briefing', label: 'News' },
 ] as const;
 
 const clock = (ms: number) => {

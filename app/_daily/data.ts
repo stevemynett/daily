@@ -93,7 +93,9 @@ export function loadListing(page: Page): Listing | null {
       }
       if (!isUniversitySport(item)) group.items.push(item);
     } else if (/^_?Generated /.test(line)) {
+      // Anything after the footer is Claude talking to the reader, not listing
       listing.footer = line.replace(/^_|_$/g, '');
+      break;
     } else if (line && !line.startsWith('#')) {
       listing.note = line;
     }

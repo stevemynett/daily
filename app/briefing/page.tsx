@@ -3,7 +3,7 @@ import BriefingView from './briefing-view';
 import { loadBriefing } from './data';
 
 export const metadata = {
-  title: 'Briefing',
+  title: 'News',
 };
 
 export default function BriefingPage() {
@@ -12,11 +12,11 @@ export default function BriefingPage() {
   return (
     <>
       <div className="title-row">
-        <h1 className="page-title">Briefing</h1>
+        <h1 className="page-title">News</h1>
         <RunStatus job="briefing" lastRun={briefing?.updatedAt ?? null} />
       </div>
 
-      {briefing === null ? <p className="muted">No briefing yet. Run `make briefing`.</p> : <BriefingView briefing={briefing} />}
+      {briefing === null ? <p className="muted">No news yet. Run `make briefing`.</p> : <BriefingView briefing={briefing} />}
     </>
   );
 }

@@ -39,7 +39,7 @@ export function progress(startedAt: string, estimate: number | null, now: number
 
 // lastRun is the listing's mtime at build; the runner (make runner) reports live status.
 // Only one job runs at a time, so busy means this one or another is running.
-export default function RunStatus({ job = 'daily', lastRun }: { job?: 'daily' | 'briefing' | 'records'; lastRun: string | null }) {
+export default function RunStatus({ job = 'daily', lastRun }: { job?: 'daily' | 'briefing' | 'records' | 'cooking'; lastRun: string | null }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [offline, setOffline] = useState(false);
 

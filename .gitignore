@@ -12,12 +12,6 @@ next-env.d.ts
 *.log
 npm-debug.log*
 
-# showsin.py output when run with the default DIR
-show-directory.md
-.show-directory-cache.json
-__pycache__/
-*.pyc
-
 # Local env overrides (BRIEFINGS_DIR, RUNNER_PORT, etc.)
 .env
 .env*.local

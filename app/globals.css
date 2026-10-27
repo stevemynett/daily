@@ -1546,6 +1546,16 @@ details.market-meta summary {
   line-height: 1.5rem;
 }
 
+a.season-item {
+  display: inline-block;
+  text-decoration: none;
+}
+
+a.season-item:hover {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+}
+
 .season-item[data-kind='seafood'] {
   border-color: var(--color-accent-border);
   background-color: var(--color-accent-bg);
@@ -1691,7 +1701,7 @@ details.market-meta summary {
   font-weight: 600;
 }
 
-/* Air, UV and exchange rate stats */
+/* Air and UV stats */
 
 .stat-row {
   display: flex;
@@ -1731,34 +1741,6 @@ details.market-meta summary {
 
 .stat[data-level='bad'] .stat-value {
   color: var(--color-code);
-}
-
-.exchange {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-  align-items: center;
-}
-
-.exchange .stat {
-  flex: 0 1 22rem;
-}
-
-.exchange-chart {
-  width: 10rem;
-  height: 2.5rem;
-}
-
-.exchange-chart polyline {
-  fill: none;
-  stroke: var(--color-accent);
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-}
-
-.exchange .caption {
-  flex-basis: 100%;
-  margin: 0;
 }
 
 /* Tides */
@@ -2191,7 +2173,7 @@ details.market-meta summary {
   font-weight: 700;
 }
 
-/* One-line-per-row tables (Records, Watch), details in a dialog */
+/* One-line-per-row tables (Records), details in a dialog */
 
 .line-table th,
 .line-table td {
@@ -2296,60 +2278,6 @@ details.market-meta summary {
 
 .info-dialog-close:hover {
   color: var(--color-text);
-}
-
-/* Watch */
-
-.watch-profile {
-  margin-bottom: 1.5rem;
-}
-
-.watch-profile summary {
-  margin-bottom: 0.75rem;
-  color: var(--color-text);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.watch-profile .tab-form-actions {
-  margin-top: 0.75rem;
-}
-
-.watch-marks .tag {
-  margin-left: 0;
-  margin-right: 0.25rem;
-}
-
-.line-table tr[data-vote='down'] td {
-  opacity: 0.5;
-}
-
-.watch-votes .info-button + .info-button {
-  margin-left: 0.25rem;
-}
-
-.watch-votes .info-button[aria-pressed='true'][data-vote='up'] {
-  color: var(--color-accent);
-}
-
-.watch-votes .info-button[aria-pressed='true'][data-vote='down'] {
-  color: var(--color-code);
-}
-
-.listing-section .watch-search-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-.watch-search-meta {
-  font-size: 0.875rem;
-  font-weight: 400;
-}
-
-.watch-search-heading .tag {
-  margin-left: auto;
 }
 
 /* Background jobs on the home page */
@@ -2467,13 +2395,113 @@ details.market-meta summary {
   align-items: center;
 }
 
-.todo-item input {
+.todo-item input[type='checkbox'] {
   width: 1.125rem;
   height: 1.125rem;
   accent-color: var(--color-accent);
 }
 
+.todo-edit {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-accent-border);
+  border-radius: calc(var(--radius) - 2px);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+}
+
 .todo-item[data-done='true'] .tab-body {
   color: var(--color-text-muted);
   text-decoration: line-through;
+}
+
+/* Travel */
+
+.travel-form {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  align-items: end;
+  max-width: none;
+}
+
+.travel-form .travel-notes {
+  grid-column: span 2;
+}
+
+.trip {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.trip p {
+  margin: 0.5rem 0;
+}
+
+.trip-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.trip-head h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.trip-actions {
+  margin-left: auto;
+}
+
+.trip-summary {
+  color: var(--color-text);
+}
+
+.trip-updated {
+  font-size: 0.8125rem;
+}
+
+.watcher-head .tag {
+  margin-left: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  .travel-form .travel-notes {
+    grid-column: auto;
+  }
+}
+
+/* Stats */
+
+.nav-stats {
+  align-self: flex-start;
+  margin: auto 1.5rem 0;
+  padding-top: 2rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.nav-stats:hover,
+.nav-stats[aria-current='page'] {
+  color: var(--color-text);
+}
+
+.stats-table th,
+.stats-table td {
+  text-align: left;
+}
+
+.stats-table .stats-count {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.stats-table tr[data-unused] td {
+  color: var(--color-text-muted);
 }

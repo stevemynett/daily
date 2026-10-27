@@ -1,5 +1,5 @@
 // Usage: node scripts/daily.mjs [days]
-// Events, jazz, food scene and a photo pick via headless Claude. Writes the full run to
+// Events, jazz, food events and a photo pick via headless Claude. Writes the full run to
 // ~/briefings/daily-YYYY-MM-DD-HHMM.md and one file per page to ~/briefings/daily/
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -8,7 +8,7 @@ import { briefings, days, done, from, info, runPrompt, stamp } from './claude.mj
 const PAGES = {
   '# Events in Vancouver': 'events',
   '# Jazz in Vancouver': 'jazz',
-  '# Vancouver food scene': 'food',
+  '# Food events in Vancouver': 'food',
   '# Photo pick': 'photo',
 };
 

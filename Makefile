@@ -4,7 +4,7 @@ RUNNER_LABEL := skm.daily.runner
 RUNNER_PLIST := $(HOME)/Library/LaunchAgents/$(RUNNER_LABEL).plist
 BREW_CADDYFILE := /opt/homebrew/etc/Caddyfile
 
-.PHONY: help dev build daily records briefing watch shows runner install-runner uninstall-runner runner-log setup hosts trust start stop restart status teardown lan
+.PHONY: help dev build daily records trip cooking briefing runner install-runner uninstall-runner runner-log setup hosts trust start stop restart status teardown lan
 
 .DEFAULT_GOAL := help
 
@@ -15,6 +15,8 @@ dev: ## Run the Next.js dev server
 	npm run dev
 
 build: ## Build the static site
+	# Next keeps build-time fetches for a year; clear them so deals, fares and shows are current
+	rm -rf .next/cache/fetch-cache
 	npm run build
 
 daily: ## Refresh the events, jazz and food listings and rebuild (DAYS=30)
@@ -25,15 +27,16 @@ records: ## Refresh the Records page (new and upcoming albums) and rebuild
 	node scripts/records.mjs
 	$(MAKE) build
 
+cooking: ## Refresh the Cooking page (seasonal recipes) and rebuild
+	node scripts/cooking.mjs
+	$(MAKE) build
+
+trip: ## Refresh one upcoming trip's briefing for the Travel page (ID=trip id)
+	node scripts/trip.mjs $(ID)
+
 briefing: ## Run the news briefing and rebuild (DAYS=2)
 	node scripts/briefing.mjs $(DAYS)
 	$(MAKE) build
-
-watch: ## Find something to watch and save the picks for the Watch page (Q="request", TYPE=Any|Movie|Series)
-	WATCH_QUERY='$(subst ','\'',$(Q))' WATCH_TYPE='$(TYPE)' node scripts/watch.mjs
-
-shows: ## Write show-directory.md into photo venue folders (DIR=folder holding the venues, FULL=1 rescans)
-	cd "$(or $(DIR),.)" && python3 $(CURDIR)/scripts/showsin.py $(if $(FULL),--full)
 
 runner: ## Run the local helper that lets the site start runs and save briefing votes
 	node scripts/runner.mjs

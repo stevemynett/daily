@@ -63,4 +63,4 @@ End the description with `(New)` for a newly recorded album or `(Reissue)` for a
 
 Jazz is capped at 60 albums; when the jazz subagents return more, keep the 60 most notable. There's no cap on jazz as a share of the page, since Latin and New Orleans releases are scarcer and a short page is worse than a jazz-heavy one. Never drop a Latin, salsa, Cuban, Afro-Cuban or New Orleans album to make room for jazz. A Latin jazz album by a Latin artist or on a Latin label is Latin jazz, not Jazz. Link each album to its Spotify album page (`https://open.spotify.com/album/...`) when a search result or a page already open shows it; the site opens these in the Spotify app. Don't spend a search per album hunting for Spotify links. Only when it isn't on Spotify, link the Bandcamp, label or review page instead, with "Info" in place of "Listen" when the link is a review. Use "Pre-order" in place of "Listen" for an album that isn't out yet.
 
-End with one line: `Generated <Mon D, YYYY>, covering <Mon D> to <Mon D>.`
+End with one line: `Generated <Mon D, YYYY>, covering <Mon D> to <Mon D>.` Nothing comes after it: no notes, caveats or summary of the run.

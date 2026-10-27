@@ -1,4 +1,4 @@
-Produce the daily listing for someone living in Vancouver, BC. It has four parts, each published as its own web page or panel: what's on in Metro Vancouver (games, concerts, comedy, live shows, festivals and fun things to do, and big public conventions), jazz shows, Vancouver food scene news, and one photography pick for today. News is handled separately by the briefing command, and album releases by the records command, so leave both out.
+Produce the daily listing for someone living in Vancouver, BC. It has four parts, each published as its own web page or panel: what's on in Metro Vancouver (games, concerts, comedy, live shows, festivals and fun things to do, and big public conventions), jazz shows, food events in Vancouver, and one photography pick for today. News is handled separately by the briefing command, and album releases by the records command, so leave both out.
 
 ## Window
 
@@ -6,7 +6,7 @@ Events: from today through $ARGUMENTS days from now (if that's blank, use 30 day
 
 Jazz: same window as events.
 
-Food scene: openings and closings from the last 2 months, plus openings announced for the next month. Other food news (new menus and tasting menus, chef changes, new dishes, deals) from the last 14 days. Restaurant reviews published in the last 7 days. Anything dated (a special dinner, a collaboration, a pop-up, a limited menu, a sale, a festival or food crawl) that runs between today and 1 month from now. Last-minute reservations for tonight and tomorrow only. Drop deals and dinners that have already ended.
+Food events: same window as events.
 
 Photo pick: today only.
 
@@ -16,7 +16,7 @@ Read `~/briefings/context.md` if it exists. Only the reader feedback part applie
 
 ## How to gather
 
-Fan out with the Task tool to keep this fast. Launch all 10 subagents in a single message so they run in parallel, and use the sonnet model for each:
+Fan out with the Task tool to keep this fast. Launch all 9 subagents in a single message so they run in parallel, and use the sonnet model for each:
 
 - Sports
 - Concerts
@@ -25,11 +25,10 @@ Fan out with the Task tool to keep this fast. Launch all 10 subagents in a singl
 - Festivals and fun, plus conventions and expos
 - Exhibitions, film and talks (filed under Festivals and fun)
 - Jazz
-- Food openings and closings
-- Food menus, deals and special dinners
-- Food reviews, new dishes and last-minute reservations
+- Food dinners, pop-ups and supper clubs
+- Food festivals, markets, classes and tastings
 
-Give each subagent its window, its category descriptions and sources, and the feedback that applies to it. Ask it to return about twice as many candidates as its section needs, so you have room to choose. Events and jazz shows need: event name, category, venue, event date and time, direct URL, and a one-sentence description. Food items need: restaurant or event name, type, neighbourhood, relevant dates, direct URL, and a one-sentence description.
+Give each subagent its window, its category descriptions and sources, and the feedback that applies to it. Ask it to return about twice as many candidates as its section needs, so you have room to choose. Events and jazz shows need: event name, category, venue, event date and time, direct URL, and a one-sentence description. Food events need the same fields as events.
 
 Do the photo pick yourself once the subagents are back, since it draws on their events results.
 
@@ -76,27 +75,25 @@ Mark ticket status the same way as on the events page: `(Sold out)` or `(Tickets
 
 End with one line: `Generated <Mon D, YYYY>, covering <Mon D> to <Mon D>.`
 
-### Food scene page
+### Food events page
 
-Start with `# Vancouver food scene`. Then one `##` heading per type that has items, in this order: `## Openings`, `## Closings`, `## New menus`, `## Deals and happy hours`, `## Special dinners and events`. Under each, newest news first, or soonest date first for dated items, one line each:
+Start with `# Food events in Vancouver`. Then one `##` heading per date that has events, in date order, written like `## Sat Oct 24`. Under each date, list that day's events sorted by start time, one line each:
 
-`- **Restaurant or event** [Type] Neighbourhood, Oct 24. One-sentence description. [Info](URL)`
+`- **Event** [Category] Venue, Neighbourhood, 7pm. One-sentence description with the price. [Tickets](URL)`
 
-Closings are the exception: only the name and the closing date, with no neighbourhood, description or link:
+Category is exactly one of Dinners and pop-ups, Festivals and markets, or Classes and tastings. Use "Info" in place of "Tickets" when the link isn't a ticket page. Mark free events and ticket status the same way as on the events page.
 
-`- **Restaurant** [Closings] Oct 31.`
+What goes in each category:
 
-What goes in each section:
+- Dinners and pop-ups: chef collaborations and guest-chef dinners, one-night pop-ups, supper clubs, wine, beer and sake dinners, and special set menus tied to a date or holiday.
+- Festivals and markets: food and drink festivals, night and holiday food markets, neighbourhood food crawls, and food events at farmers markets.
+- Classes and tastings: cooking classes, butchery and pasta workshops, wine, whisky and cheese tastings, and chef talks.
 
-- Openings: new restaurants, bars and cafes that opened recently or open soon.
-- Closings: restaurants that closed recently or announced a closing date.
-- New menus: new menus and new tasting menus, chef changes, interesting dishes appearing on local menus, and restaurant reviews published this week. For a review, start the description with the outlet and critic, like "Reviewed by Alexandra Gill in the Globe and Mail:", and link the review.
-- Deals and happy hours: happy hour specials, sales and limited-time deals, and last-minute reservations. Only list a last-minute reservation when the restaurant or a booking site has publicly posted open tables for tonight or tomorrow, and say which night and roughly when.
-- Special dinners and events: chef collaborations, pop-ups and supper clubs, wine dinners and tasting events, food festivals and neighbourhood food crawls.
+Events only. No restaurant openings, closings, reviews, new menus or happy hours, and no ongoing deals without a date.
 
-Type is exactly the `##` heading it sits under, without the `##`. The date is when it opened or closed, when the menu or deal starts, or the dinner date; write a range like `Oct 24 to Nov 2` when it has one, and "ongoing" for an open-ended happy hour. Neighbourhood is the area or city, like Gastown, Mount Pleasant, or Richmond.
+The food page covers the City of Vancouver only. Leave out Richmond, Burnaby, Coquitlam, Surrey, New Westminster, Langley, the North Shore and every other suburb.
 
-End with one line: `Generated <Mon D, YYYY>, covering news since <Mon D>.`
+End with one line: `Generated <Mon D, YYYY>, covering <Mon D> to <Mon D>.`
 
 ### Photo pick
 
@@ -129,6 +126,6 @@ Pick one place to go take photos today. Check today's hourly forecast for Vancou
   - Film screenings and repertory cinema: special screenings, series, retrospectives and one-night events at The Cinematheque, VIFF Centre, the Rio Theatre and the Vancity Theatre. Not regular first-run releases.
   - Talks, lectures and author events: Vancouver Public Library, Vancouver Writers Fest, UBC and SFU public lectures, the Vancouver Institute, Massy Books, Iron Dog Books and other bookstores.
   - Cultural events at community centres and neighbourhood houses: City of Vancouver community centres, the Roundhouse, the Italian Cultural Centre, the Chinese Cultural Centre, the Japanese Hall and neighbourhood houses. Concerts, dance, cultural festivals and celebrations open to the public.
-- Conventions and expos: large public conventions, consumer shows and fairs that anyone can buy a ticket to, at the Vancouver Convention Centre, BC Place, the PNE and Hastings Park, Rogers Arena, the Tradex in Abbotsford and the River Rock in Richmond. Fan and comic conventions, gaming and anime cons, home and garden shows, auto and boat shows, craft and holiday fairs, wine and food festivals. Up to 6. No industry-only trade shows or business conferences. Check each venue's own events calendar.
+- Conventions and expos: large public conventions, consumer shows and fairs that anyone can buy a ticket to, at the Vancouver Convention Centre, BC Place, the PNE and Hastings Park, Rogers Arena, the Tradex in Abbotsford and the River Rock in Richmond. Fan and comic conventions, gaming and anime cons, home and garden shows, auto and boat shows, craft and holiday fairs. Food and wine festivals go on the food page. Up to 6. No industry-only trade shows or business conferences. Check each venue's own events calendar.
 - Jazz: every jazz show in Metro Vancouver in the window, up to 30, including touring acts at major venues. Check these calendars first: Frankie's Jazz Club (frankiesjazzclub.ca), Coastal Jazz (coastaljazz.ca), the Hot Jazz Club, Pat's Pub at the Patricia Hotel, Blue Frog Studios in White Rock, Pyatt Hall, the Chan Centre, the Orpheum, the Vogue Theatre, Massey Theatre, Kay Meek Arts Centre, and the Commodore Ballroom. Then Georgia Straight and Vancouver Is Awesome listings. Skip background dinner music unless the act is notable.
-- Food scene: restaurant, bar and cafe openings and closings, new menus and tasting menus, chef changes, interesting new dishes, restaurant reviews from this week, sales and limited-time deals, happy hours, last-minute reservations, chef collaborations, pop-ups and supper clubs, wine dinners and tastings, food festivals and neighbourhood food crawls. Aim for 25 to 35 items across the page, with openings and closings the largest sections. Real restaurants and bars only, no chain promotions or grocery deals. Daily Hive Dished (including its monthly openings and closings roundups), Scout Magazine (including its Intel and openings posts), Vancouver Magazine, Eater Vancouver, Vancouver Is Awesome, Georgia Straight food, Stir, Urban Diner, Inside Vancouver, Foodgressing, and restaurant Instagram or websites when an article links them. For reviews, also the Globe and Mail, Vancouver Sun, Vancouver Magazine and Montecristo. For supper clubs, pop-ups and wine dinners, also Eventbrite, Tock and restaurant newsletters. For last-minute reservations, restaurant Instagram posts and Resy or OpenTable pages that an article or post links to.
+- Food events, City of Vancouver only (no Richmond, Burnaby, Coquitlam, the North Shore or other suburbs): chef collaborations, pop-ups and supper clubs, wine and beer dinners, food festivals, night and holiday markets, food crawls, cooking classes, workshops and tastings. Up to 25. Real restaurants, chefs and producers, no chain promotions or brand activations. Scout Magazine (its Intel and events posts), Daily Hive Dished, Vancouver Magazine, Eater Vancouver, Vancouver Is Awesome, Georgia Straight food, Stir, Foodgressing, Inside Vancouver, Eventbrite, Tock, Resy events, Dished events listings, restaurant newsletters and Instagram when an article links them, and the cooking schools (Dirty Apron, Hawksworth's classes, Well Seasoned, The Pasta Workshop and the like). Food and drink festivals go here, not under Festivals and fun.

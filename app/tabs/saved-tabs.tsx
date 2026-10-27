@@ -5,11 +5,6 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 type List = 'read' | 'saved';
 type Tab = { url: string; why: string; added: string; list: List };
 
-const LISTS: { id: List; label: string }[] = [
-  { id: 'read', label: 'To Read' },
-  { id: 'saved', label: 'Saved Stuff' },
-];
-
 const host = (url: string) => {
   try {
     return new URL(url).hostname.replace(/^www\./, '');
@@ -116,28 +111,23 @@ const KINDS: { kind: string; match: RegExp; byUrl?: boolean; icon: ReactNode }[]
 
 const kindOf = (url: string) => KINDS.find((k) => k.match.test(k.byUrl ? url : host(url)))!;
 
-// Both lists live in ~/briefings/saved-tabs.json, read and written through the runner
-export default function SavedTabs() {
+// Both lists live in ~/briefings/saved-tabs.json, read and written through the runner;
+// each page shows one and leaves the other's entries alone
+export default function SavedTabs({ list }: { list: List }) {
   const [tabs, setTabs] = useState<Tab[] | null>(null);
   const [offline, setOffline] = useState(false);
-  const [list, setList] = useState<List>('read');
   const [kind, setKind] = useState<string | null>(null);
   const [url, setUrl] = useState('');
   const [why, setWhy] = useState('');
 
   useEffect(() => {
-    if (location.hash === '#saved') setList('saved');
+    // Old links to the Saved list on this page
+    if (list === 'read' && location.hash === '#saved') location.replace('/saved');
     fetch('/api/tabs')
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then(setTabs)
       .catch(() => setOffline(true));
-  }, []);
-
-  function pick(next: List) {
-    setList(next);
-    setKind(null);
-    history.replaceState(null, '', next === 'saved' ? '#saved' : location.pathname);
-  }
+  }, [list]);
 
   async function save(next: Tab[]) {
     const res = await fetch('/api/tabs', {
@@ -170,16 +160,16 @@ export default function SavedTabs() {
 
   return (
     <>
-      <div className="job-tabs" role="tablist" aria-label="Lists">
-        {LISTS.map((l) => (
-          <button key={l.id} type="button" role="tab" className="job-tab" aria-selected={l.id === list} onClick={() => pick(l.id)}>
-            {l.label}
-            <span className="job-tab-count">{inList(l.id).length}</span>
-          </button>
-        ))}
-      </div>
-
-      <form className="tab-form" onSubmit={add}>
+      <form
+        className="tab-form"
+        onSubmit={add}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && e.shiftKey) {
+            e.preventDefault();
+            e.currentTarget.requestSubmit();
+          }
+        }}
+      >
         <label>
           <span>Link</span>
           <input type="text" inputMode="url" placeholder="https://" value={url} onChange={(e) => setUrl(e.target.value)} required />

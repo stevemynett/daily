@@ -1,7 +1,7 @@
 // Local helper so the static site can trigger `make daily`, `make briefing` and `make records`, save
 // briefing votes and track saved jobs. Caddy proxies /api/* here.
 import { spawn } from 'node:child_process';
-import { createWriteStream, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createWriteStream, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -28,6 +28,8 @@ const jobs = {
   daily: { output: () => join(process.env.DAILY_DIR ?? join(briefings, 'daily'), 'events.md'), run: null },
   briefing: { output: () => join(briefings, latestBriefing()), run: null },
   records: { output: () => join(process.env.DAILY_DIR ?? join(briefings, 'daily'), 'albums.md'), run: null },
+  // Monthly, since the in-season list only changes with the month
+  cooking: { output: () => join(process.env.DAILY_DIR ?? join(briefings, 'daily'), 'cooking.md'), run: null, monthly: true },
 };
 
 function lastRun(job) {
@@ -88,9 +90,10 @@ const status = (job) => ({
   estimate: estimate(job),
 });
 
-// Today at RUN_HOUR local time, or null before then
-function cutoff() {
+// Today (or the 1st, for monthly jobs) at RUN_HOUR local time, or null before then
+function cutoff(job) {
   const at = new Date();
+  if (jobs[job].monthly) at.setDate(1);
   at.setHours(RUN_HOUR, 0, 0, 0);
   return Date.now() >= at.getTime() ? at : null;
 }
@@ -98,7 +101,7 @@ function cutoff() {
 // Due when the output predates today's cutoff. One try per day, so a failing
 // job doesn't rerun every check.
 function due(job) {
-  const at = cutoff();
+  const at = cutoff(job);
   if (!at) return false;
   const last = lastRun(job);
   const tried = jobs[job].run && new Date(jobs[job].run.startedAt) >= at;
@@ -108,7 +111,7 @@ function due(job) {
 // Runs missed while the laptop was asleep or off start on the next check
 function tick() {
   if (busy()) return;
-  const job = ['briefing', 'daily', 'records'].find(due);
+  const job = ['briefing', 'daily', 'records', 'cooking'].find(due);
   if (!job) return;
   console.log(`scheduled run of make ${job}`);
   start(job);
@@ -145,6 +148,12 @@ function saveFeedback(req, send) {
 // Saved, applied, rejected and nope jobs from the Jobs page
 const trackedFile = join(jobsDir, 'saved-jobs.json');
 const isMap = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+
+function writeAtomic(file, text) {
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(`${file}.tmp`, text);
+  renameSync(`${file}.tmp`, file);
+}
 
 function loadTracked(send) {
   try {
@@ -208,121 +217,124 @@ function saveTodos(req, send) {
   });
 }
 
-// What to watch: searches run scripts/watch.mjs, which doesn't build the site, so they don't wait
-// on the daily and briefing lock. The page reads everything here at runtime.
-const watchDir = join(briefings, 'watch');
-const searchesDir = join(watchDir, 'searches');
-const profileFile = join(watchDir, 'profile.md');
-const marksFile = join(watchDir, 'marks.json');
-const WATCH_TYPES = ['Any', 'Movie', 'Series'];
-const VOTES = ['up', 'down'];
-const STATUSES = ['want', 'watched'];
-const DEFAULT_PROFILE = `We have Netflix, Crave (with HBO), Prime Video, Apple TV+ and Disney+ (with Hulu).
-We mostly watch recent releases and want better picks than what the apps push at us.
+// Travel: deal watchers and upcoming trips from the Travel page. Each trip gets a briefing from
+// scripts/trip.mjs, which doesn't build the site, so trip runs don't wait on the job lock.
+const travelDir = join(briefings, 'travel');
+const watchersFile = join(travelDir, 'watchers.json');
+const tripsFile = join(travelDir, 'trips.json');
+const reportsDir = join(travelDir, 'reports');
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const TRIP_ID = /^[a-z0-9-]{1,80}$/;
+const DAY = 24 * 60 * 60 * 1000;
+let tripRun = null;
 
-Liked:
+const readJson = (file, fallback) => {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch {
+    return fallback;
+  }
+};
+const isWatcher = (w) => isMap(w) && typeof w.terms === 'string' && w.terms.trim() && (w.maxPrice === undefined || typeof w.maxPrice === 'number');
+const isTrip = (t) =>
+  isMap(t) && TRIP_ID.test(t.id ?? '') && typeof t.place === 'string' && DATE.test(t.start ?? '') && (!t.end || DATE.test(t.end));
+const tripStatus = () => ({ running: !!tripRun && tripRun.finishedAt === null, run: tripRun, estimate: estimate('trip') });
+const localDate = (date = new Date()) => date.toLocaleDateString('en-CA', { timeZone: 'America/Vancouver' });
 
-Didn't like:
-`;
-let watchRun = null;
-
-const watchStatus = () => ({
-  running: !!watchRun && watchRun.finishedAt === null,
-  run: watchRun,
-  estimate: estimate('watch'),
-});
-
-function writeAtomic(file, text) {
-  mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(`${file}.tmp`, text);
-  renameSync(`${file}.tmp`, file);
-}
-
-function startWatch(query, type) {
-  const run = { startedAt: new Date().toISOString(), finishedAt: null, exitCode: null, query, type };
-  watchRun = run;
-  const log = createWriteStream(join(logDir, 'watch.log'));
-  const child = spawn('node', ['scripts/watch.mjs'], {
-    cwd: root,
-    env: { ...process.env, WATCH_QUERY: query, WATCH_TYPE: type },
-  });
+function startTrip(id) {
+  const run = { id, startedAt: new Date().toISOString(), finishedAt: null, exitCode: null };
+  tripRun = run;
+  const log = createWriteStream(join(logDir, 'trip.log'));
+  const child = spawn('node', ['scripts/trip.mjs', id], { cwd: root });
   child.stdout.pipe(log);
   child.stderr.pipe(log);
   child.on('close', (code) => {
     run.finishedAt = new Date().toISOString();
     run.exitCode = code;
-    if (code === 0) record('watch', run);
-    console.log(`watch search exited with ${code}`);
+    if (code === 0) record('trip', run);
+    console.log(`trip ${id} exited with ${code}`);
+    tripTick();
   });
 }
 
-function loadWatch(send) {
-  let profile;
-  try {
-    profile = readFileSync(profileFile, 'utf8');
-  } catch {
-    profile = DEFAULT_PROFILE;
-    writeAtomic(profileFile, profile);
-  }
-  let marks = {};
-  try {
-    marks = JSON.parse(readFileSync(marksFile, 'utf8'));
-  } catch {}
-  mkdirSync(searchesDir, { recursive: true });
-  const searches = readdirSync(searchesDir)
-    .filter((f) => f.endsWith('.json') && STAMP.test(f.slice(0, -5)))
-    .sort()
-    .reverse()
-    .flatMap((f) => {
-      try {
-        return [JSON.parse(readFileSync(join(searchesDir, f), 'utf8'))];
-      } catch {
-        return [];
-      }
+// Briefings refresh weekly, then daily in the two weeks before a trip, and stop once it's over.
+// One try per trip per day, so a failing one doesn't rerun every check.
+const tried = new Map();
+function tripTick() {
+  if (tripStatus().running) return;
+  const today = localDate();
+  const trip = readJson(tripsFile, []).find((t) => {
+    if (!isTrip(t) || (t.end || t.start) < today || tried.get(t.id) === today) return false;
+    const generated = readJson(join(reportsDir, `${t.id}.json`), null)?.generatedAt;
+    const soon = new Date(t.start) - Date.now() < 14 * DAY;
+    return !generated || Date.now() - new Date(generated) > (soon ? DAY : 7 * DAY) - 60 * 60 * 1000;
+  });
+  if (!trip) return;
+  tried.set(trip.id, today);
+  console.log(`scheduled briefing for trip ${trip.id}`);
+  startTrip(trip.id);
+}
+
+function loadTravelData(send) {
+  const trips = readJson(tripsFile, []);
+  const reports = Object.fromEntries(trips.map((t) => [t.id, readJson(join(reportsDir, `${t.id}.json`), null)]));
+  send(200, { watchers: readJson(watchersFile, []), trips, reports, status: tripStatus() });
+}
+
+function saveList(file, isItem, label) {
+  return (req, send) =>
+    readBody(req, send, (data) => {
+      if (!Array.isArray(data) || !data.every(isItem)) return send(400, { error: `bad ${label}` });
+      writeAtomic(file, JSON.stringify(data, null, 2));
+      send(200, { saved: true });
     });
-  send(200, { profile, marks, searches, status: watchStatus() });
 }
+const saveWatchers = saveList(watchersFile, isWatcher, 'watchers');
+const saveTrips = saveList(tripsFile, isTrip, 'trips');
 
-function runWatch(req, send) {
+function runTrip(req, send) {
   readBody(req, send, (data) => {
-    const query = typeof data.query === 'string' ? data.query.trim() : '';
-    const type = data.type ?? 'Any';
-    if (query.length > 500 || !WATCH_TYPES.includes(type)) return send(400, { error: 'bad search' });
-    if (watchStatus().running) return send(409, watchStatus());
-    startWatch(query, type);
-    send(202, watchStatus());
+    if (!readJson(tripsFile, []).some((t) => t.id === data.id)) return send(400, { error: 'no such trip' });
+    if (tripStatus().running) return send(409, tripStatus());
+    startTrip(data.id);
+    send(202, tripStatus());
   });
 }
 
-function saveProfile(req, send) {
-  readBody(req, send, (data) => {
-    if (typeof data.text !== 'string' || data.text.length > 20_000) return send(400, { error: 'bad profile' });
-    writeAtomic(profileFile, data.text);
-    send(200, { saved: true });
-  });
+// Page views and clicks from every device, for the Stats page. Counts only, keyed by page,
+// section and control, with the last time each was used.
+const statsFile = join(briefings, 'stats.json');
+let stats = null;
+
+function loadStats() {
+  if (stats) return stats;
+  try {
+    stats = JSON.parse(readFileSync(statsFile, 'utf8'));
+  } catch {
+    stats = { since: new Date().toISOString(), views: {}, clicks: {} };
+  }
+  return stats;
 }
 
-function saveMarks(req, send) {
+function saveHit(req, send) {
   readBody(req, send, (data) => {
-    const isMark = (m) =>
-      isMap(m) &&
-      typeof m.title === 'string' &&
-      (m.vote === undefined || VOTES.includes(m.vote)) &&
-      (m.status === undefined || STATUSES.includes(m.status)) &&
-      (m.vote || m.status);
-    if (!isMap(data) || !Object.values(data).every(isMark)) {
-      return send(400, { error: 'bad marks' });
+    const short = (value) => typeof value === 'string' && value.length > 0 && value.length <= 200;
+    if (!isMap(data) || !short(data.path) || !['view', 'click'].includes(data.kind)) return send(400, { error: 'bad hit' });
+    if (data.kind === 'click' && !short(data.label)) return send(400, { error: 'bad hit' });
+    const all = loadStats();
+    const now = new Date().toISOString();
+    if (data.kind === 'view') {
+      const view = (all.views[data.path] ??= { count: 0 });
+      view.count += 1;
+      view.last = now;
+    } else {
+      const section = short(data.section) ? data.section : '';
+      const click = (all.clicks[[data.path, section, data.label].join('\u0000')] ??= { path: data.path, section, label: data.label, count: 0 });
+      click.count += 1;
+      click.last = now;
     }
-    writeAtomic(marksFile, JSON.stringify(data, null, 2));
+    writeAtomic(statsFile, JSON.stringify(all, null, 2));
     send(200, { saved: true });
-  });
-}
-
-function deleteSearch(req, send) {
-  readBody(req, send, (data) => {
-    if (!STAMP.test(data.stamp ?? '')) return send(400, { error: 'bad stamp' });
-    rmSync(join(searchesDir, `${data.stamp}.json`), { force: true });
-    send(200, { deleted: true });
   });
 }
 
@@ -343,15 +355,15 @@ createServer((req, res) => {
   if (req.url === '/api/tabs' && req.method === 'POST') return saveTabs(req, send);
   if (req.url === '/api/jobs/saved' && req.method === 'GET') return loadTracked(send);
   if (req.url === '/api/jobs/saved' && req.method === 'POST') return saveTracked(req, send);
+  if (req.url === '/api/stats' && req.method === 'GET') return send(200, loadStats());
+  if (req.url === '/api/stats/hit' && req.method === 'POST') return saveHit(req, send);
   if (req.url === '/api/todos' && req.method === 'GET') return loadTodos(send);
   if (req.url === '/api/todos' && req.method === 'POST') return saveTodos(req, send);
-  if (req.url === '/api/watch' && req.method === 'GET') return loadWatch(send);
-  if (req.url === '/api/watch/status' && req.method === 'GET') return send(200, watchStatus());
-  if (req.url === '/api/watch/run' && req.method === 'POST') return runWatch(req, send);
-  if (req.url === '/api/watch/profile' && req.method === 'POST') return saveProfile(req, send);
-  if (req.url === '/api/watch/marks' && req.method === 'POST') return saveMarks(req, send);
-  if (req.url === '/api/watch/delete' && req.method === 'POST') return deleteSearch(req, send);
-  const [, job, action] = req.url.match(/^\/api\/(daily|briefing|records)\/(status|run)$/) ?? [];
+  if (req.url === '/api/travel' && req.method === 'GET') return loadTravelData(send);
+  if (req.url === '/api/travel/watchers' && req.method === 'POST') return saveWatchers(req, send);
+  if (req.url === '/api/travel/trips' && req.method === 'POST') return saveTrips(req, send);
+  if (req.url === '/api/travel/run' && req.method === 'POST') return runTrip(req, send);
+  const [, job, action] = req.url.match(/^\/api\/(daily|briefing|records|cooking)\/(status|run)$/) ?? [];
   if (action === 'status' && req.method === 'GET') return send(200, status(job));
   if (action === 'run' && req.method === 'POST') {
     if (busy()) return send(409, status(job));
@@ -363,3 +375,5 @@ createServer((req, res) => {
 
 setTimeout(tick, 60_000);
 setInterval(tick, 15 * 60_000);
+setTimeout(tripTick, 90_000);
+setInterval(tripTick, 15 * 60_000);
